@@ -2,18 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using ms_notificaciones.Models;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using Amazon.SimpleEmail.Model;
 
 using Amazon;
-using System;
-using System.Collections.Generic;
-using Amazon.SimpleEmail;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using Content = Amazon.SimpleEmail.Model.Content;
-using DotNetEnv;
 using System.Text.Json;
-using System.ComponentModel.DataAnnotations; // Add this using directive
 
 namespace ms_notificaciones.Controllers;
 
