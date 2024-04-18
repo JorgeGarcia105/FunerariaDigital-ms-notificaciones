@@ -1,10 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 using ms_notificaciones.Models;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-
 using Amazon;
-using System.Text.Json;
+using System;
+using System.Collections.Generic;
+using Amazon.SimpleEmail;
+using Amazon.SimpleEmail.Model;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Content = Amazon.SimpleEmail.Model.Content;
+using DotNetEnv;
+using System.Text.Json; // Add this using directive
 
 namespace ms_notificaciones.Controllers;
 
@@ -31,7 +40,6 @@ public record CreateProductRequest(int Id, string? Name, string? Description);
 [ApiController]
 public class ProductsController : ControllerBase
 {
-    
     private readonly IAmazonSimpleNotificationService _snsClient;
     private readonly ILogger<ProductsController> _logger;
     private const string ProductTopic = "product-topic";
@@ -83,6 +91,89 @@ public class ProductsController : ControllerBase
 [Route("[controller]")]
 public class NotificacionesController : ControllerBase
 {
+    /** Método para enviar un correo de bienvenida a un usuario a traves de 
+     * @param datos Modelo de datos del correo
+     * @return Resultado de la operación
+     */
+    [Route("enviar-correo")]
+    [HttpPost]
+    public async Task<IActionResult> EnviarCorreoBienvenida(ModeloCorreo datos) {
+        try {
+            // Obtener las credenciales de AWS SES desde variables de entorno
+            var accesskey = Environment.GetEnvironmentVariable("ACCESS_KEY_AWS_GMAIL");
+            var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY_AWS_GMAIL");
+
+            // Crear cliente de Amazon SES
+            var client = new AmazonSimpleEmailServiceClient(accesskey, secretKey, RegionEndpoint.USEast1);
+
+            // Crear y enviar la solicitud de correo electrónico
+
+            SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
+
+
+            // Enviar el correo electrónico
+            sendRequest.Message = new Message
+            {
+                Subject = new Content(datos.asuntoCorreo),
+                Body = new Body
+                {
+                    Html = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = datos.contenidoCorreo
+                    },
+                    Text = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = datos.contenidoCorreo
+                    }
+                }
+            };
+            var response = await client.SendEmailAsync(sendRequest);
+            // Verificar si el correo electrónico se envió correctamente
+            if(response.HttpStatusCode == System.Net.HttpStatusCode.OK) {
+                return Ok("Correo enviado correctamente");
+            } else {
+                // Loggear cualquier error
+                Console.WriteLine($"Error al enviar el correo a {datos.correoDestino}. Estado HTTP: {response.HttpStatusCode}");
+                return BadRequest("Error al enviar el correo");
+            }
+        } catch(Exception ex) {
+            // Loggear cualquier excepción y devolver un error
+            Console.WriteLine($"Error al enviar el correo: {ex.Message}");
+            return BadRequest("Error al enviar el correo" +  ex.Message);
+        }
+    }     
+
+    /** Método para crear la solicitud de correo electrónico
+     * @param datos Modelo de datos del correo
+     * @return Solicitud de correo electrónico
+     */
+    private SendEmailRequest CreateBaseMessage(ModeloCorreo datos) {
+        // Obtener información del remitente y destinatario del modelo
+        var from = new EmailAddress(Environment.GetEnvironmentVariable("EMAIL_FROM"), Environment.GetEnvironmentVariable("NAME_FROM"));
+        var subject = datos.asuntoCorreo;
+        Console.WriteLine("Correo de destino: " + datos.correoDestino);
+        Console.WriteLine("Nombre de destino: " + datos.nombreDestino);
+        var to = new EmailAddress(datos.correoDestino, datos.nombreDestino);
+        var plainTextContent = datos.contenidoCorreo;
+        var htmlContent = datos.contenidoCorreo;
+
+        // Crear la solicitud de correo electrónico
+        return new SendEmailRequest {
+            Source = from.Email,
+            Destination = new Destination {
+                ToAddresses = new List<string> { to.Email }
+            },
+            Message = new Message {
+                Subject = new Content(subject),
+                Body = new Body {
+                    Html = new Content(htmlContent),
+                    Text = new Content(plainTextContent)
+                }
+            }
+        };
+    }
 
     // Envio de sms
     [Route("enviar-sms")]
