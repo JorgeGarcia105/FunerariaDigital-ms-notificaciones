@@ -111,7 +111,7 @@ public class NotificacionesController : ControllerBase
             SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
 
              // Leer la plantilla de correo electrónico
-            var emailTemplate = System.IO.File.ReadAllText("./html/index.html");
+            var emailTemplate = System.IO.File.ReadAllText("./plantillas/index.html");
 
             // Reemplazar los marcadores de posición con los datos reales
             emailTemplate = emailTemplate.Replace("{FirstName}", datos.asuntoCorreo);
@@ -185,30 +185,34 @@ public class NotificacionesController : ControllerBase
     // Envio de sms
     [Route("enviar-sms")]
     [HttpPost]
-    public async Task<ActionResult> EnviarSMSNuevaClave(ModeloSms datos) {
+public async Task<ActionResult> EnviarSMSNuevaClave(ModeloSms datos) {
+    var accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY_AWS");
+    var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY_AWS");
+    var client = new AmazonSimpleNotificationServiceClient(accessKey, secretKey, RegionEndpoint.USEast1);
 
-        var accesskey = Environment.GetEnvironmentVariable("ACCESS_KEY_AWS");
-        var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY_AWS");
-        var client = new AmazonSimpleNotificationServiceClient(accesskey, secretKey, RegionEndpoint.USEast1);
-        var messageAtributes = new Dictionary<string, MessageAttributeValue>();
-        var smsType = new MessageAttributeValue {
-            DataType = "String",
-            StringValue = "Transactional"
-        };
+    // Leer la plantilla desde el archivo
+    var smsTemplate = System.IO.File.ReadAllText("./plantillas/nuevaclave.txt");
 
-        messageAtributes.Add("AWS.SNS.SMS.SMSType", smsType);
+    // Reemplazar los marcadores de posición con los datos reales
+    var mensaje = smsTemplate.Replace("{Nombre}", datos.nombreDestinatario)
+                             .Replace("{Clave}", datos.contenidoMensaje);
 
-        PublishRequest request = new PublishRequest {
-            PhoneNumber = datos.numeroDestino,
-            Message = datos.contenidoMensaje,
-            MessageAttributes = messageAtributes
-        };
+    // Configurar y enviar el SMS
+    var messageAttributes = new Dictionary<string, MessageAttributeValue> {
+        {"AWS.SNS.SMS.SMSType", new MessageAttributeValue { DataType = "String", StringValue = "Transactional" }}
+    };
 
-        try {
-            await client.PublishAsync(request);
-            return Ok("SMS enviado correctamente");
-        } catch{
-            return BadRequest("Error al enviar el sms");
-        }
+    var request = new PublishRequest {
+        PhoneNumber = datos.numeroDestino,
+        Message = mensaje,
+        MessageAttributes = messageAttributes
+    };
+
+    try {
+        await client.PublishAsync(request);
+        return Ok("SMS enviado correctamente");
+    } catch (Exception ex) {
+        return BadRequest("Error al enviar el sms: " + ex.Message);
     }
+}
 }

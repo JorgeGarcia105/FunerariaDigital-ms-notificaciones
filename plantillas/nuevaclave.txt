@@ -1,0 +1,1 @@
+Hola {Nombre}, tu nueva clave de acceso es {Clave}. Puedes usar esta clave para iniciar sesión en tu cuenta. Por tu seguridad, no compartas esta clave con nadie.

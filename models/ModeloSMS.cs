@@ -4,6 +4,8 @@ namespace ms_notificaciones.Models
     {
         public string? numeroDestino { get; set; }
 
+        public string? nombreDestinatario { get; set; }
+
         public string? contenidoMensaje { get; set; }
     }
 }
