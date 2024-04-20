@@ -110,6 +110,13 @@ public class NotificacionesController : ControllerBase
 
             SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
 
+             // Leer la plantilla de correo electrónico
+            var emailTemplate = System.IO.File.ReadAllText("./html/index.html");
+
+            // Reemplazar los marcadores de posición con los datos reales
+            emailTemplate = emailTemplate.Replace("{FirstName}", datos.asuntoCorreo);
+            emailTemplate = emailTemplate.Replace("{2FACode}", datos.contenidoCorreo);
+
 
             // Enviar el correo electrónico
             sendRequest.Message = new Message
@@ -120,12 +127,12 @@ public class NotificacionesController : ControllerBase
                     Html = new Content
                     {
                         Charset = "UTF-8",
-                        Data = datos.contenidoCorreo
+                        Data = emailTemplate
                     },
                     Text = new Content
                     {
                         Charset = "UTF-8",
-                        Data = datos.contenidoCorreo
+                        Data = emailTemplate
                     }
                 }
             };
