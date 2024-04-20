@@ -114,7 +114,7 @@ public class NotificacionesController : ControllerBase
             var emailTemplate = System.IO.File.ReadAllText("./plantillas/index.html");
 
             // Reemplazar los marcadores de posición con los datos reales
-            emailTemplate = emailTemplate.Replace("{FirstName}", datos.asuntoCorreo);
+            emailTemplate = emailTemplate.Replace("{FirstName}", datos.nombreDestino);
             emailTemplate = emailTemplate.Replace("{2FACode}", datos.contenidoCorreo);
 
 
