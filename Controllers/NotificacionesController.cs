@@ -111,7 +111,7 @@ public class NotificacionesController : ControllerBase
             SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
 
              // Leer la plantilla de correo electrónico
-            var emailTemplate = System.IO.File.ReadAllText("./plantillas/index.html");
+            var emailTemplate = System.IO.File.ReadAllText("./plantillas/2fa.html");
 
             // Reemplazar los marcadores de posición con los datos reales
             emailTemplate = emailTemplate.Replace("{FirstName}", datos.nombreDestino);
@@ -151,6 +151,133 @@ public class NotificacionesController : ControllerBase
             return BadRequest("Error al enviar el correo" +  ex.Message);
         }
     }     
+
+    /** Método para enviar un correo de solicitud servicio
+     * @param datos Modelo de datos del correo
+     * @return Resultado de la operación
+     */
+    [Route("enviar-correo-datos-servicio")]
+    [HttpPost]
+    public async Task<IActionResult> EnviarCorreoSolicitud(ModeloCorreo datos) {
+        try {
+            // Obtener las credenciales de AWS SES desde variables de entorno
+            var accesskey = Environment.GetEnvironmentVariable("ACCESS_KEY_AWS_GMAIL");
+            var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY_AWS_GMAIL");
+
+            // Crear cliente de Amazon SES
+            var client = new AmazonSimpleEmailServiceClient(accesskey, secretKey, RegionEndpoint.USEast1);
+
+            // Crear y enviar la solicitud de correo electrónico
+
+            SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
+
+             // Leer la plantilla de correo electrónico
+            var emailTemplate = System.IO.File.ReadAllText("./plantillas/solicitudServicio.html");
+
+            // Reemplazar los marcadores de posición con los datos reales
+            emailTemplate = emailTemplate.Replace("{FirstName}", datos.nombreDestino);
+            emailTemplate = emailTemplate.Replace("{solicitudServicio}", datos.contenidoCorreo);
+
+
+            // Enviar el correo electrónico
+            sendRequest.Message = new Message
+            {
+                Subject = new Content(datos.asuntoCorreo),
+                Body = new Body
+                {
+                    Html = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = emailTemplate
+                    },
+                    Text = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = emailTemplate
+                    }
+                }
+            };
+            var response = await client.SendEmailAsync(sendRequest);
+            // Verificar si el correo electrónico se envió correctamente
+            if(response.HttpStatusCode == System.Net.HttpStatusCode.OK) {
+                return Ok("Correo enviado correctamente");
+            } else {
+                // Loggear cualquier error
+                Console.WriteLine($"Error al enviar el correo a {datos.correoDestino}. Estado HTTP: {response.HttpStatusCode}");
+                return BadRequest("Error al enviar el correo");
+            }
+        } catch(Exception ex) {
+            // Loggear cualquier excepción y devolver un error
+            Console.WriteLine($"Error al enviar el correo: {ex.Message}");
+            return BadRequest("Error al enviar el correo" +  ex.Message);
+        }
+    }     
+
+
+    /** Método para enviar un correo de solicitud servicio
+     * @param datos Modelo de datos del correo
+     * @return Resultado de la operación
+     */
+    [Route("enviar-correo-sala-chat")]
+    [HttpPost]
+    public async Task<IActionResult> EnviarCorreoSala(ModeloCorreo datos) {
+        try {
+            // Obtener las credenciales de AWS SES desde variables de entorno
+            var accesskey = Environment.GetEnvironmentVariable("ACCESS_KEY_AWS_GMAIL");
+            var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY_AWS_GMAIL");
+
+            // Crear cliente de Amazon SES
+            var client = new AmazonSimpleEmailServiceClient(accesskey, secretKey, RegionEndpoint.USEast1);
+
+            // Crear y enviar la solicitud de correo electrónico
+
+            SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
+
+             // Leer la plantilla de correo electrónico
+            var emailTemplate = System.IO.File.ReadAllText("./plantillas/salachat.html");
+
+            // Reemplazar los marcadores de posición con los datos reales
+            emailTemplate = emailTemplate.Replace("{FirstName}", datos.nombreDestino);
+            emailTemplate = emailTemplate.Replace("{codigoUnico}", datos.contenidoCorreo);
+            emailTemplate = emailTemplate.Replace("{llaveMaestra}", datos.llaveMaestra);
+
+
+
+            // Enviar el correo electrónico
+            sendRequest.Message = new Message
+            {
+                Subject = new Content(datos.asuntoCorreo),
+                Body = new Body
+                {
+                    Html = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = emailTemplate
+                    },
+                    Text = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = emailTemplate
+                    }
+                }
+            };
+            var response = await client.SendEmailAsync(sendRequest);
+            // Verificar si el correo electrónico se envió correctamente
+            if(response.HttpStatusCode == System.Net.HttpStatusCode.OK) {
+                return Ok("Correo enviado correctamente");
+            } else {
+                // Loggear cualquier error
+                Console.WriteLine($"Error al enviar el correo a {datos.correoDestino}. Estado HTTP: {response.HttpStatusCode}");
+                return BadRequest("Error al enviar el correo");
+            }
+        } catch(Exception ex) {
+            // Loggear cualquier excepción y devolver un error
+            Console.WriteLine($"Error al enviar el correo: {ex.Message}");
+            return BadRequest("Error al enviar el correo" +  ex.Message);
+        }
+    }     
+
+
 
     /** Método para crear la solicitud de correo electrónico
      * @param datos Modelo de datos del correo

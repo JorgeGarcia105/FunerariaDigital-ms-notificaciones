@@ -9,5 +9,7 @@ namespace ms_notificaciones.Models
         public string? asuntoCorreo { get; set; }
 
         public string? contenidoCorreo { get; set; }
+
+        public string? llaveMaestra { get; set; }
     }
 }
