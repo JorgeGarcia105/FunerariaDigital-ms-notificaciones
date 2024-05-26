@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalle de PQRS Recibida</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: #4CAF50;
+            color: #ffffff;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content p {
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-top: 1px solid #ddd;
+            margin-top: 20px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        .footer p {
+            margin: 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Detalle de PQRS Recibida</h1>
+        </div>
+        <div class="content">
+            <p>Hola Administrador,</p>
+            <p>Hemos recibido una nueva PQRS. A continuación, se muestran los detalles:</p>
+            <p><strong>Tipo:</strong> {TipoPQRS}</p>
+            <p><strong>Nombre del Usuario:</strong> {NombreUsuario}</p>
+            <p><strong>Correo del Usuario:</strong> {CorreoUsuario}</p>
+            <p><strong>Mensaje:</strong></p>
+            <p>{MensajePQRS}</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 FunerariaDigital. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

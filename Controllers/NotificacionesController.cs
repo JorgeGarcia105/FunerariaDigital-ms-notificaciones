@@ -342,4 +342,73 @@ public async Task<ActionResult> EnviarSMSNuevaClave(ModeloSms datos) {
         return BadRequest("Error al enviar el sms: " + ex.Message);
     }
 }
+
+    //Envio de pqrs
+    [Route("enviar-pqrs")]
+    [HttpPost]
+    public async Task<IActionResult> EnviarPQRS(ModeloCorreo datos)
+    {
+        try
+        {
+            // Obtener las credenciales de AWS SES desde variables de entorno
+            var accesskey = Environment.GetEnvironmentVariable("ACCESS_KEY_AWS_GMAIL");
+            var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY_AWS_GMAIL");
+
+            // Crear cliente de Amazon SES
+            var client = new AmazonSimpleEmailServiceClient(accesskey, secretKey, RegionEndpoint.USEast1);
+
+            // Crear y enviar la solicitud de correo electrónico
+            SendEmailRequest sendRequest = this.CreateBaseMessage(datos);
+
+            // Leer la plantilla de correo electrónico
+            var emailTemplate = System.IO.File.ReadAllText("./plantillas/pqrs.html");
+
+            // Reemplazar los marcadores de posición con los datos reales
+            emailTemplate = emailTemplate.Replace("{TipoPQRS}", datos.asuntoCorreo);
+            emailTemplate = emailTemplate.Replace("{NombreUsuario}", datos.nombreDestino);
+            emailTemplate = emailTemplate.Replace("{CorreoUsuario}", datos.correoDestino);
+            emailTemplate = emailTemplate.Replace("{MensajePQRS}", datos.contenidoCorreo);
+
+            // Configurar el mensaje del correo electrónico
+            sendRequest.Message = new Message
+            {
+                Subject = new Content(datos.asuntoCorreo),
+                Body = new Body
+                {
+                    Html = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = emailTemplate
+                    },
+                    Text = new Content
+                    {
+                        Charset = "UTF-8",
+                        Data = emailTemplate
+                    }
+                }
+            };
+
+            // Enviar el correo electrónico
+            var response = await client.SendEmailAsync(sendRequest);
+
+            // Verificar si el correo electrónico se envió correctamente
+            if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return Ok("Correo enviado correctamente");
+            }
+            else
+            {
+                // Loggear cualquier error
+                Console.WriteLine($"Error al enviar el correo a {datos.correoDestino}. Estado HTTP: {response.HttpStatusCode}");
+                return BadRequest("Error al enviar el correo");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Loggear cualquier excepción y devolver un error
+            Console.WriteLine($"Error al enviar el correo: {ex.Message}");
+            return BadRequest("Error al enviar el correo: " + ex.Message);
+        }
+    }
+    
 }
